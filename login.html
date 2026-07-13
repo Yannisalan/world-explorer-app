@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>Login | World Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="app-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=20260622-ui-v2">
+</head>
+<body class="auth-page">
+<main class="auth-shell">
+    <section class="auth-visual" aria-label="World Explorer">
+        <span class="brand-mark" aria-hidden="true">W</span>
+        <h1>World Explorer</h1>
+        <p>Explore the globe, save the places you have seen, and keep a clean wishlist for the next trip.</p>
+    </section>
+
+    <section class="auth-panel" aria-labelledby="loginTitle">
+        <h2 id="loginTitle">Welcome Back</h2>
+        <p>Sign in to open your travel map.</p>
+
+        <div class="auth-message" id="registeredMessage" hidden>Account created. You can sign in now.</div>
+        <div class="auth-error" id="loginError" hidden></div>
+
+        <form class="auth-form" action="login.php" method="POST">
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" autocomplete="email" required>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" autocomplete="current-password" required>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="auth-footer">New here? <a href="register.html">Create account</a></p>
+    </section>
+</main>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const loginError = document.getElementById("loginError");
+const loginMessages = {
+    "1": "Invalid email or password.",
+    "verify": "Please verify your email before logging in.",
+    db: "Database unavailable. Start MySQL and try again.",
+    locked: "Too many failed attempts. Please wait 15 minutes before trying again."
+};
+const loginErrorKey = params.get("error");
+
+if (loginMessages[loginErrorKey]) {
+    loginError.textContent = loginMessages[loginErrorKey];
+    loginError.hidden = false;
+} else {
+    loginError.hidden = true;
+}
+document.getElementById("registeredMessage").hidden = !params.has("registered");
+</script>
+</body>
+</html>

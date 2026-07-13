@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>Register | World Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="app-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=20260622-ui-v2">
+</head>
+<body class="auth-page">
+<main class="auth-shell">
+    <section class="auth-visual" aria-label="World Explorer">
+        <span class="brand-mark" aria-hidden="true">W</span>
+        <h1>World Explorer</h1>
+        <p>Build a personal map of countries, capitals, images, visited places, and future routes.</p>
+    </section>
+
+    <section class="auth-panel" aria-labelledby="registerTitle">
+        <h2 id="registerTitle">Create Account</h2>
+        <p>Your globe opens after login.</p>
+
+        <div class="auth-error" id="registerError" hidden></div>
+
+        <form class="auth-form" action="register.php" method="POST">
+            <div class="field">
+                <label for="name">Full Name</label>
+                <input id="name" type="text" name="name" autocomplete="name" required>
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" autocomplete="email" required>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" autocomplete="new-password" minlength="6" required>
+            </div>
+
+            <button type="submit">Register</button>
+        </form>
+
+        <p class="auth-footer">Already registered? <a href="login.html">Login</a></p>
+    </section>
+</main>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const registerError = document.getElementById("registerError");
+const registerMessages = {
+    exists: "Email already exists.",
+    invalid: "Enter a valid name, email, and password.",
+    db: "Database unavailable. Start MySQL and try again."
+};
+const registerErrorKey = params.get("error");
+
+if (registerMessages[registerErrorKey]) {
+    registerError.textContent = registerMessages[registerErrorKey];
+    registerError.hidden = false;
+} else {
+    registerError.hidden = true;
+}
+</script>
+</body>
+</html>

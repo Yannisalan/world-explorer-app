@@ -1,0 +1,96 @@
+<?php
+require_once "user_theme.php";
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.html");
+    exit();
+}
+
+if (!isset($_SESSION['user']) && db_is_ready()) {
+    $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $dbName = $stmt->fetchColumn();
+    if ($dbName) {
+        $_SESSION['user'] = $dbName;
+    }
+}
+
+$userName = htmlspecialchars($_SESSION['user'] ?? 'Explorer', ENT_QUOTES, 'UTF-8');
+$themeName = htmlspecialchars($theme ?? 'dark', ENT_QUOTES, 'UTF-8');
+?>
+
+<?php $assetVersion = '20260622-streets-pop'; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>World Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="app-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=<?php echo $assetVersion; ?>">
+</head>
+
+<body class="map-page" data-theme="<?php echo $themeName; ?>">
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="index.php" aria-label="World Explorer home">
+            <span class="brand-mark" aria-hidden="true">W</span>
+            <span>
+                <strong>World Explorer</strong>
+                <small>Travel map</small>
+            </span>
+        </a>
+
+        <form class="search-form" id="searchForm" role="search">
+            <label class="sr-only" for="search">Search country</label>
+            <input type="search" id="search" list="countrySuggestions" placeholder="Search country" autocomplete="off">
+            <datalist id="countrySuggestions"></datalist>
+            <button type="submit">Search</button>
+        </form>
+
+        <nav class="top-actions" aria-label="Account">
+            <button class="install-button" id="installButton" type="button" hidden>Install</button>
+            
+            <div class="dropdown-menu" id="userMenu">
+                <button class="menu-button" id="userMenuButton" type="button" aria-label="User menu" aria-expanded="false" aria-haspopup="true">
+                    <span class="user-chip"><?php echo $userName; ?></span>
+                    <span class="menu-chevron" aria-hidden="true">&#9662;</span>
+                </button>
+                <div class="dropdown-content" id="userMenuPanel" role="menu">
+                    <a href="profile.php">Profile</a>
+                    <a href="settings.php">Settings</a>
+                    <a href="wishlist.php">Wishlist</a>
+                    <a href="visited.php">Visited Countries</a>
+                    <a href="logout.php">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="map-stage" aria-label="Interactive globe">
+        <div id="globeViz"></div>
+
+        <div class="loading-status" id="loadingSpinner" role="status">
+            <span></span>
+            Loading atlas
+        </div>
+
+        <aside class="country-panel" id="infoBox" aria-live="polite" aria-label="Country details">
+            <button class="panel-close" id="closeInfoBox" type="button" aria-label="Close">&times;</button>
+            <div class="country-details" id="countryDetails">
+                <h2>Select a country</h2>
+            </div>
+        </aside>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+</div>
+
+<script defer src="https://unpkg.com/globe.gl"></script>
+<script defer src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+<script defer src="script.js?v=<?php echo $assetVersion; ?>"></script>
+</body>
+</html>
