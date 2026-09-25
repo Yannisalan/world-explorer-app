@@ -22,18 +22,26 @@ function sendVerificationEmail($email, $name, $token)
     try {
         // SMTP Configuration
         $mail->isSMTP();
-        $mail->Host = "smtp.gmail.com";
+        $mail->Host = getenv("SMTP_HOST") ?: "smtp.gmail.com";
         $mail->SMTPAuth = true;
 
-        // CHANGE THESE
-        $mail->Username = "worldexplorerapp00@gmail.com";
-        $mail->Password = "jupl uwxg kqim mpks";
+        $username = getenv("SMTP_USERNAME") ?: "";
+        $password = getenv("SMTP_PASSWORD") ?: "";
+        $fromAddress = getenv("SMTP_FROM") ?: $username;
+
+        if ($username === "" || $password === "") {
+            error_log("Mailer Error: SMTP_USERNAME and SMTP_PASSWORD must be set.");
+            return false;
+        }
+
+        $mail->Username = $username;
+        $mail->Password = $password;
 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mail->Port = (int) (getenv("SMTP_PORT") ?: 587);
 
         // Sender
-        $mail->setFrom("worldexplorerapp00@gmail.com", "World Explorer");
+        $mail->setFrom($fromAddress, "World Explorer");
 
         // Recipient
         $mail->addAddress($email, $name);
@@ -42,8 +50,16 @@ function sendVerificationEmail($email, $name, $token)
         $mail->isHTML(true);
         $mail->Subject = "Verify your World Explorer account";
 
-        // Change localhost if your project is hosted online
-        $verificationLink = "http://localhost/world-explorer-app/verify.php?token=" . urlencode($token);
+        // The verification link has to point at wherever verify.php is actually
+        // served, which is the API origin, not this machine and not the static
+        // frontend. APP_URL is the backend's public base URL.
+        $appUrl = rtrim((string) (getenv("APP_URL") ?: ""), '/');
+        if ($appUrl === '') {
+            error_log("Mailer Error: APP_URL must be set to the public base URL of this API.");
+            return false;
+        }
+
+        $verificationLink = "{$appUrl}/verify.php?token=" . urlencode($token);
 
         $mail->Body = "
         <div style='font-family:Arial,sans-serif;padding:20px'>

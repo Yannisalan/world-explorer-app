@@ -1,0 +1,44 @@
+# The document root is the repository root, so PHP sources and repo metadata sit
+# next to the servable assets. Deny the former and the latter explicitly rather
+# than relying on .dockerignore alone.
+#
+# Note: .php files must NOT be denied here. Every endpoint in this app is a
+# top-level .php script under the document root, so denying the extension would
+# take the whole application offline.
+
+# Never serve dotfiles. Covers .env, .env.local, .git and .htaccess itself.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Repo metadata and data files that are not part of the served application.
+# schema.sql in particular would hand an attacker the full table layout.
+<FilesMatch "^(schema\.sql|package\.json|package-lock\.json|skills-lock\.json|neon\.ts|README\.md|Dockerfile|render\.yaml)$">
+    Require all denied
+</FilesMatch>
+
+# Source that is not an endpoint. These are include-only and would otherwise
+# leak the DSN, the resolved theme, or the mail transport config when requested
+# directly. Every other .php in the root is a real browser-facing endpoint.
+<FilesMatch "^(config|user_theme|send_verification_email)\.php$">
+    Require all denied
+</FilesMatch>
+
+# Assets are cache-busted with a ?v= query, so a long cache is safe for them.
+# The worker and the manifest are excluded: caching those pins clients to a
+# stale service worker, which is the one thing a PWA cannot recover from.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+
+    <Files "service-worker.js">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </Files>
+
+    <Files "manifest.webmanifest">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </Files>
+</IfModule>
+
+DirectoryIndex index.php index.html

@@ -1,0 +1,24 @@
+# Secrets and local config must never reach the image layer. The app reads
+# DATABASE_URL from the process environment on Render, so nothing here is
+# needed at runtime except as a local fallback.
+.env
+.env.local
+.env.*.local
+
+.git
+.gitignore
+.idea
+.vs
+node_modules
+skills-lock.json
+package.json
+package-lock.json
+neon.ts
+
+# Not part of the served application.
+README.md
+schema.sql
+Dockerfile
+.dockerignore
+render.yaml
+docker/

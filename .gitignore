@@ -1,1 +1,20 @@
+# Local credentials. .env.local holds the Neon development connection string
+# and must never be committed or baked into the image.
 .env
+.env.local
+.env.*.local
+
+# Neon CLI local state
+.neon
+
+# Only needed for the Neon config helper, not for the deployed app.
+node_modules/
+
+# Editor and OS noise
+.idea/
+.vs/
+.DS_Store
+Thumbs.db
+
+# Agent skill definitions, not part of the application
+.agents/
