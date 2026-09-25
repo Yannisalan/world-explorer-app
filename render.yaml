@@ -4,8 +4,15 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: starter
-    healthCheckPath: /get_countries.php
+    # Free tier. The container spins down after a period of inactivity, so the
+    # first request after a quiet spell can take up to ~30s while it wakes.
+    # The Neon's pooled connection plus PHP's opcache warm-up cover the rest.
+    # Change to `starter` if that cold start is not acceptable.
+    plan: free
+    # /get_countries.php requires a session and answers 401 without one, and
+    # Render treats anything other than 2xx as unhealthy, so the deploy would
+    # never pass. health.php is unauthenticated and reports 200/503.
+    healthCheckPath: /health.php
     # Every variable below is a secret and is set in the Render dashboard or via
     # `render env`, not in this file. See .env.example for the full list.
     envVars:

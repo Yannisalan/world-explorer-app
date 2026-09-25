@@ -1,0 +1,47 @@
+# The Vercel deployment is static. The PHP API deploys to Render.
+#
+# This is a security control, not just noise: a static host has no PHP runtime,
+# so every .php file uploaded here would be served as plain text, turning the
+# whole API into source disclosure. Keep the PHP tree on the Render side only.
+
+# API source, as a directory pattern so it covers everything beneath it.
+*.php
+docker/
+.vercel/
+
+# Server and deployment config: not needed to serve static files, and
+# render.yaml plus the Dockerfile describe the other half of the system.
+Dockerfile
+.dockerignore
+.htaccess
+render.yaml
+
+# Secrets and machine-specific local state.
+.env
+.env.local
+.env.*.local
+.git/
+.gitignore
+.idea/
+.vs/
+.neon
+neon.ts
+package.json
+package-lock.json
+skills-lock.json
+
+# Agent tooling. Gitignored, but .vercelignore replaces .gitignore for the
+# upload, so it has to be repeated here or ~300KB of internal skill docs get
+# published alongside the app.
+.agents/
+
+# Repo metadata that is not needed to serve the site.
+.gitattributes
+
+# Documentation and the schema. schema.sql in particular is the full table
+# layout, which is not something to publish next to a live API.
+README.md
+schema.sql
+
+# .env.example is deliberately NOT excluded: it is a tracked template with
+# every value empty, and it documents the variables the API expects.

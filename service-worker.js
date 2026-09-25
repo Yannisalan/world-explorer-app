@@ -1,7 +1,18 @@
-const CACHE_NAME = "world-explorer-v12";
+// Bump the cache name on every deploy that changes a precached file, otherwise
+// clients keep the previous copy indefinitely.
+const CACHE_NAME = "world-explorer-v13";
 const STATIC_ASSETS = [
+  "./index.html",
   "./login.html",
   "./register.html",
+  "./profile.html",
+  "./settings.html",
+  "./wishlist.html",
+  "./visited.html",
+  "./config.js",
+  "./app.js",
+  "./saved-list.js",
+  "./settings.js",
   "./styles.css?v=20260622-streets-pop",
   "./script.js?v=20260622-streets-pop",
   "./data/countries.json",
@@ -31,6 +42,11 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+
+  // Only the frontend origin is cached. The API is on a different origin
+  // entirely, so this also guarantees no session-bearing response is ever
+  // stored in the cache: cross-origin requests are left alone before anything
+  // else runs.
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
@@ -45,7 +61,7 @@ self.addEventListener("fetch", event => {
       if (cachedResponse) return cachedResponse;
 
       return fetch(request).then(networkResponse => {
-        if (networkResponse.ok && !url.pathname.endsWith(".php")) {
+        if (networkResponse.ok) {
           const copy = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
         }

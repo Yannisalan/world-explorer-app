@@ -2,7 +2,7 @@
   "name": "World Explorer",
   "short_name": "Explorer",
   "description": "An interactive globe app for tracking visited countries and travel wishlist places.",
-  "start_url": "./index.php",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#05070d",

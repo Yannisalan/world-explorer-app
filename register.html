@@ -47,6 +47,13 @@
     </section>
 </main>
 
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+// See login.html: the form posts to the API and the API answers with a 302
+// back to this origin.
+document.querySelector(".auth-form").action = apiUrl("register.php");
+</script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const registerError = document.getElementById("registerError");

@@ -3,7 +3,7 @@ include "config.php";
 require_once "send_verification_email.php";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: register.html");
+    header("Location: " . frontend_url("register.html"));
     exit();
 }
 
@@ -17,19 +17,19 @@ $password = $_POST['password'] ?? '';
 
 // Validate name
 if ($name === '' || mb_strlen($name) > 100) {
-    header("Location: register.html?error=invalid");
+    header("Location: " . frontend_url("register.html?error=invalid"));
     exit();
 }
 
 // Validate email
 if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 254) {
-    header("Location: register.html?error=invalid");
+    header("Location: " . frontend_url("register.html?error=invalid"));
     exit();
 }
 
 // Validate password
 if (mb_strlen($password) < 6 || mb_strlen($password) > 72) {
-    header("Location: register.html?error=invalid");
+    header("Location: " . frontend_url("register.html?error=invalid"));
     exit();
 }
 
@@ -40,7 +40,7 @@ $check = $conn->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
 $check->execute([$email]);
 
 if ($check->fetchColumn() > 0) {
-    header("Location: register.html?error=exists");
+    header("Location: " . frontend_url("register.html?error=exists"));
     exit();
 }
 
@@ -67,12 +67,12 @@ $stmt->execute([
 // Send verification email
 if (sendVerificationEmail($email, $name, $token)) {
 
-    header("Location: login.html?verify=1");
+    header("Location: " . frontend_url("login.html?verify=1"));
     exit();
 
 } else {
 
-    header("Location: register.html?error=email");
+    header("Location: " . frontend_url("register.html?error=email"));
     exit();
 
 }

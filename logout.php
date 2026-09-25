@@ -5,5 +5,5 @@ require_once __DIR__ . "/config.php";
 
 destroy_session();
 
-header("Location: login.html");
+header("Location: " . frontend_url("login.html"));
 exit();

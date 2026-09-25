@@ -41,4 +41,8 @@
     </Files>
 </IfModule>
 
-DirectoryIndex index.php index.html
+# index.php is gone: the pages are static and are meant to be served from the
+# frontend origin. The static files still sit in this document root so the API
+# host can serve them too, which costs nothing and gives a same-origin fallback
+# while the two hosts are being brought up.
+DirectoryIndex index.html

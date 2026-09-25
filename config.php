@@ -347,9 +347,48 @@ function require_db_json(): void
     exit();
 }
 
+/**
+ * Public base URL of the static frontend.
+ *
+ * Auth endpoints live on the API origin but must send the browser back to the
+ * frontend afterwards, so every redirect that targets a page has to be
+ * absolute. Falls back to the request's own origin when unset, which keeps
+ * same-origin local development working with no configuration.
+ */
+function frontend_base_url(): string
+{
+    $configured = rtrim(trim((string) (getenv('FRONTEND_ORIGIN') ?: '')), '/');
+
+    if ($configured !== '') {
+        // A comma-separated allowlist is also valid input; the first entry is
+        // the canonical frontend and the rest exist only for CORS.
+        $first = trim(explode(',', $configured)[0]);
+        return rtrim($first, '/');
+    }
+
+    $scheme = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off') ? 'https' : 'http';
+    $host = trim((string) ($_SERVER['HTTP_HOST'] ?? ''));
+
+    return $host === '' ? '' : $scheme . '://' . $host;
+}
+
+/**
+ * Absolute URL for a frontend page, e.g. frontend_url('login.html').
+ *
+ * With no FRONTEND_ORIGIN and no Host header this returns the path unchanged,
+ * which preserves the old relative-redirect behaviour.
+ */
+function frontend_url(string $path): string
+{
+    $base = frontend_base_url();
+    $path = '/' . ltrim($path, '/');
+
+    return $base === '' ? $path : $base . $path;
+}
+
 function redirect_with_error(string $location, string $error): void
 {
-    header("Location: {$location}" . (str_contains($location, "?") ? "&" : "?") . "error=" . urlencode($error));
+    header("Location: " . frontend_url($location) . (str_contains($location, "?") ? "&" : "?") . "error=" . urlencode($error));
     exit();
 }
 
@@ -435,13 +474,48 @@ function csrf_token(): string
     return $_SESSION['csrf_token'];
 }
 
+/**
+ * Decoded JSON request body, read once and cached.
+ *
+ * The endpoints were form posts when the frontend shared this origin; they are
+ * JSON now that the frontend is deployed separately, so the body has to be
+ * read from php://input rather than $_POST. Cached because the stream is
+ * consumed on first read.
+ */
+function request_json(): array
+{
+    static $body = null;
+
+    if ($body === null) {
+        $raw = file_get_contents('php://input');
+        $decoded = ($raw === false || $raw === '') ? [] : json_decode($raw, true);
+        $body = is_array($decoded) ? $decoded : [];
+    }
+
+    return $body;
+}
+
 function verify_csrf(): void
 {
+    // Accept either encoding: a form post from a browser that navigated here,
+    // or a JSON body from fetch.
     $supplied = (string) ($_POST['csrf_token'] ?? '');
+
+    if ($supplied === '') {
+        $body = request_json();
+        $supplied = (string) ($body['csrf_token'] ?? '');
+    }
+
     $expected = (string) ($_SESSION['csrf_token'] ?? '');
+
     if ($expected === '' || !hash_equals($expected, $supplied)) {
         http_response_code(403);
-        exit('Invalid or missing security token. Please go back and try again.');
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Invalid or missing security token. Reload the page and try again.'
+        ]);
+        exit();
     }
 }
 

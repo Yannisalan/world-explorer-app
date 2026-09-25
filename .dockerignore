@@ -16,9 +16,11 @@ package-lock.json
 neon.ts
 
 # Not part of the served application.
+# docker/ is deliberately NOT ignored: the Dockerfile copies docker/entrypoint.sh
+# into the image, and excluding it from the build context makes the build fail
+# with "COPY failed: no source files were specified".
 README.md
 schema.sql
 Dockerfile
 .dockerignore
 render.yaml
-docker/

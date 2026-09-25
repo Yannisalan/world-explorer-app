@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>Settings | World Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="app-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=20260622-ui-v2">
+</head>
+
+<body class="page-shell settings-page" data-theme="dark">
+<main class="page-wrap">
+    <nav class="page-nav" aria-label="Settings navigation">
+        <a class="brand" href="index.html" aria-label="World Explorer home">
+            <span class="brand-mark" aria-hidden="true">W</span>
+            <span>
+                <strong>World Explorer</strong>
+                <small>Settings</small>
+            </span>
+        </a>
+        <div class="page-nav-actions">
+            <a class="btn btn-secondary" href="profile.html">Profile</a>
+            <a class="btn btn-primary" href="index.html">Open Globe</a>
+        </div>
+    </nav>
+
+    <header class="settings-hero">
+        <p class="eyebrow">Account controls</p>
+        <h1>Settings</h1>
+        <p>Manage your account details, display preference, and optional password update.</p>
+    </header>
+
+    <div class="page-message success" id="pageSuccess" hidden></div>
+    <div class="page-message error" id="pageError" hidden></div>
+
+    <form class="settings-form" id="settingsForm">
+        <input type="hidden" name="csrf_token" id="csrfToken">
+        <section class="settings-section" aria-labelledby="accountTitle">
+            <div>
+                <p class="eyebrow">Identity</p>
+                <h2 id="accountTitle">Account</h2>
+            </div>
+            <div class="field">
+                <label for="email">Email address</label>
+                <input id="email" type="email" name="email" required>
+            </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="securityTitle">
+            <div>
+                <p class="eyebrow">Security</p>
+                <h2 id="securityTitle">Password</h2>
+            </div>
+            <div class="settings-grid">
+                <div class="field">
+                    <label for="current_password">Current password</label>
+                    <input id="current_password" type="password" name="current_password" autocomplete="current-password">
+                </div>
+                <div class="field">
+                    <label for="new_password">New password</label>
+                    <input id="new_password" type="password" name="new_password" autocomplete="new-password" minlength="6">
+                </div>
+            </div>
+            <p class="field-hint">Leave both password fields empty to keep your current password.</p>
+        </section>
+
+        <section class="settings-section" aria-labelledby="preferencesTitle">
+            <div>
+                <p class="eyebrow">Preferences</p>
+                <h2 id="preferencesTitle">Display</h2>
+            </div>
+            <fieldset class="segmented-control">
+                <legend class="sr-only">Theme</legend>
+                <label>
+                    <input type="radio" name="theme" value="dark">
+                    <span>Dark</span>
+                </label>
+                <label>
+                    <input type="radio" name="theme" value="light">
+                    <span>Light</span>
+                </label>
+                <label>
+                    <input type="radio" name="theme" value="auto">
+                    <span>Auto</span>
+                </label>
+            </fieldset>
+        </section>
+
+        <section class="settings-section" aria-labelledby="notificationsTitle">
+            <div>
+                <p class="eyebrow">Updates</p>
+                <h2 id="notificationsTitle">Notifications</h2>
+            </div>
+            <label class="toggle-row">
+                <input type="checkbox" id="notifications" name="notifications" value="1">
+                <span>Email notifications</span>
+            </label>
+        </section>
+
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="index.html">Cancel</a>
+            <button class="btn btn-primary" type="submit">Save Settings</button>
+        </div>
+    </form>
+
+    <section class="danger-zone" aria-labelledby="dangerTitle">
+        <div>
+            <p class="eyebrow">Irreversible</p>
+            <h2 id="dangerTitle">Delete account</h2>
+            <p>Deleting your account permanently removes your profile, saved countries, and wishlist. This cannot be undone.</p>
+        </div>
+
+        <form class="danger-form" id="deleteForm">
+            <input type="hidden" name="csrf_token" id="deleteCsrfToken">
+
+            <div class="field">
+                <label for="delete_password">Confirm your password</label>
+                <input id="delete_password" type="password" name="current_password" autocomplete="current-password">
+            </div>
+
+            <div class="field">
+                <label for="confirm_delete">Type <code>DELETE</code> to confirm</label>
+                <input id="confirm_delete" type="text" name="confirm_delete"
+                       autocomplete="off" spellcheck="false" required
+                       pattern="DELETE" placeholder="DELETE">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-danger" type="submit">Delete Account</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="settings.js"></script>
+</body>
+</html>

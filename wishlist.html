@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>Wishlist | World Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="app-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=20260622-ui-v2">
+</head>
+
+<body class="page-shell wishlist-page" data-theme="dark"
+      data-list-id="wishlistList"
+      data-count-id="wishlistCount"
+      data-empty-id="wishlistEmptyState"
+      data-endpoint-get="get_wishlist.php"
+      data-endpoint-save="save_wishlist.php"
+      data-endpoint-remove="remove_wishlist.php"
+      data-storage-key="worldExplorerWishlist"
+      data-label="Wishlist">
+<main class="page-wrap">
+    <nav class="page-nav" aria-label="Wishlist navigation">
+        <a class="brand" href="index.html" aria-label="World Explorer home">
+            <span class="brand-mark" aria-hidden="true">W</span>
+            <span>
+                <strong>World Explorer</strong>
+                <small>Wishlist</small>
+            </span>
+        </a>
+        <div class="page-nav-actions">
+            <a class="btn btn-secondary" href="visited.html">Visited</a>
+            <a class="btn btn-secondary" href="profile.html">Profile</a>
+            <a class="btn btn-primary" href="index.html">Open Globe</a>
+        </div>
+    </nav>
+
+    <div class="page-message error" id="pageError" hidden></div>
+
+    <header class="settings-hero">
+        <p class="eyebrow">Dream destinations</p>
+        <h1>Wishlist</h1>
+        <p>Countries you want to visit someday.</p>
+    </header>
+
+    <section class="profile-layout" aria-labelledby="userName">
+        <div class="profile-card">
+            <div class="profile-avatar" aria-hidden="true" id="userAvatar">E</div>
+            <p class="eyebrow">Explorer</p>
+            <h2 id="userName">Explorer</h2>
+            <div class="profile-stat" style="margin-top:18px">
+                <span id="wishlistCount">0</span>
+                <small>Countries on wishlist</small>
+            </div>
+        </div>
+
+        <div class="profile-details" style="display:block;padding:0">
+            <ul class="country-list" id="wishlistList" style="padding:18px;gap:10px;overflow:visible"></ul>
+        </div>
+    </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="saved-list.js"></script>
+</body>
+</html>

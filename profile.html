@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>Profile | World Explorer</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="app-icon.svg">
+    <link rel="stylesheet" href="styles.css?v=20260622-ui-v2">
+</head>
+
+<body class="page-shell profile-page" data-theme="dark">
+<main class="page-wrap">
+    <nav class="page-nav" aria-label="Profile navigation">
+        <a class="brand" href="index.html" aria-label="World Explorer home">
+            <span class="brand-mark" aria-hidden="true">W</span>
+            <span>
+                <strong>World Explorer</strong>
+                <small>Profile</small>
+            </span>
+        </a>
+        <div class="page-nav-actions">
+            <a class="btn btn-secondary" href="settings.html">Settings</a>
+            <a class="btn btn-primary" href="index.html">Open Globe</a>
+        </div>
+    </nav>
+
+    <div class="page-message error" id="pageError" hidden></div>
+
+    <section class="profile-layout" aria-labelledby="profileTitle">
+        <div class="profile-card">
+            <div class="profile-avatar" aria-hidden="true" id="profileAvatar">E</div>
+            <p class="eyebrow">Explorer profile</p>
+            <h1 id="profileTitle">Explorer</h1>
+            <p id="profileEmail">&nbsp;</p>
+        </div>
+
+        <div class="profile-details">
+            <div class="profile-stat">
+                <span id="visitedCount">0</span>
+                <small>Visited countries</small>
+            </div>
+            <div class="profile-stat">
+                <span id="wishlistCount">0</span>
+                <small>Wishlist countries</small>
+            </div>
+            <div class="profile-info-list">
+                <div>
+                    <span>Name</span>
+                    <strong id="profileName">Explorer</strong>
+                </div>
+                <div>
+                    <span>Email</span>
+                    <strong id="profileEmailValue">&nbsp;</strong>
+                </div>
+                <div>
+                    <span>Status</span>
+                    <strong>Active</strong>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <a class="btn btn-secondary" id="logoutLink" href="login.html">Logout</a>
+                <a class="btn btn-primary" href="settings.html">Edit Settings</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+    (async function () {
+        const session = await requireSession();
+        if (!session) return;
+
+        const name = session.user.name;
+
+        document.getElementById("profileTitle").textContent = name;
+        document.getElementById("profileName").textContent = name;
+        document.getElementById("profileAvatar").textContent = name.charAt(0).toUpperCase() || "E";
+        document.getElementById("profileEmail").textContent = session.user.email;
+        document.getElementById("profileEmailValue").textContent = session.user.email;
+        document.getElementById("visitedCount").textContent = session.counts.visited;
+        document.getElementById("wishlistCount").textContent = session.counts.wishlist;
+
+        document.getElementById("logoutLink").href = apiUrl("logout.php");
+    })();
+</script>
+</body>
+</html>

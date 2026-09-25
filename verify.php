@@ -31,5 +31,5 @@ $stmt = $conn->prepare("
 
 $stmt->execute([$user['id']]);
 
-header("Location: login.html?verified=1");
+header("Location: " . frontend_url("login.html?verified=1"));
 exit();

@@ -44,6 +44,15 @@
     </section>
 </main>
 
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+// Login stays a real form POST to the API rather than a fetch(). The response
+// is a 302 to this page's origin, so the browser navigates there directly and
+// no CORS negotiation is involved. The cookie still has to be accepted on this
+// cross-site response, which the API's SameSite=None cookie permits.
+document.querySelector(".auth-form").action = apiUrl("login.php");
+</script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const loginError = document.getElementById("loginError");

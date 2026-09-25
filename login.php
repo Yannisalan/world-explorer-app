@@ -3,7 +3,7 @@ require_once "config.php";
 session_start();
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: login.html");
+    header("Location: " . frontend_url("login.html"));
     exit();
 }
 
@@ -28,7 +28,7 @@ if ($now - $_SESSION['login_attempts']['since'] > LOGIN_WINDOW_SECONDS) {
 }
 
 if ($_SESSION['login_attempts']['count'] >= LOGIN_MAX_ATTEMPTS) {
-    header("Location: login.html?error=locked");
+    header("Location: " . frontend_url("login.html?error=locked"));
     exit();
 }
 
@@ -44,7 +44,7 @@ if (
     $password === "" ||
     !filter_var($email, FILTER_VALIDATE_EMAIL)
 ) {
-    header("Location: login.html?error=1");
+    header("Location: " . frontend_url("login.html?error=1"));
     exit();
 }
 
@@ -65,19 +65,19 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
     $_SESSION['login_attempts']['count']++;
-    header("Location: login.html?error=1");
+    header("Location: " . frontend_url("login.html?error=1"));
     exit();
 }
 
 if (!password_verify($password, $user["password"])) {
     $_SESSION['login_attempts']['count']++;
-    header("Location: login.html?error=1");
+    header("Location: " . frontend_url("login.html?error=1"));
     exit();
 }
 
 // NEW: Email verification check
 if (!db_to_bool($user["verified"])) {
-    header("Location: login.html?error=verify");
+    header("Location: " . frontend_url("login.html?error=verify"));
     exit();
 }
 
@@ -89,5 +89,5 @@ session_regenerate_id(true);
 $_SESSION["user_id"] = $user["id"];
 $_SESSION["user"] = $user["name"];
 
-header("Location: index.php");
+header("Location: " . frontend_url("index.html"));
 exit();

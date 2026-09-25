@@ -1,10 +1,14 @@
-﻿const STORAGE_KEYS = {
+const STORAGE_KEYS = {
   visited: "worldExplorerVisited",
   wishlist: "worldExplorerWishlist"
 };
 
+// Resolved at load time. The first entry is an API endpoint, the second is a
+// static file on the frontend origin and the third is a third-party CDN, so
+// this list deliberately mixes origins and dataFetch below has to tell them
+// apart.
 const COUNTRY_DATA_ENDPOINTS = [
-  "countries.php",
+  apiUrl("countries.php"),
   "data/countries.json",
   "https://raw.githubusercontent.com/mledoze/countries/master/countries.json"
 ];
@@ -13,6 +17,22 @@ const TOPOLOGY_ENDPOINTS = [
   "https://unpkg.com/world-atlas@2/countries-110m.json",
   "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
 ];
+
+/**
+ * fetch for read-only reference data, which comes from three different places.
+ *
+ * Only requests aimed at our own API are given credentials: the session cookie
+ * is SameSite=None, so it would otherwise be attached to the CDN requests too.
+ * When the API is same-origin (local development) the fetch default already
+ * sends the cookie and this stays out of the way.
+ */
+function dataFetch(url) {
+  const isApi = API_BASE !== "" && url.startsWith(API_BASE);
+  return fetch(url, {
+    headers: { "Accept": "application/json" },
+    ...(isApi ? { credentials: "include" } : {})
+  });
+}
 
 const elements = {
   globe: document.getElementById("globeViz"),
@@ -229,11 +249,7 @@ async function fetchFirstJson(urls) {
 }
 
 async function fetchJsonStrict(url) {
-  const response = await fetch(url, {
-    headers: {
-      "Accept": "application/json"
-    }
-  });
+  const response = await dataFetch(url);
 
   if (!response.ok) {
     throw new Error(`Request failed with ${response.status}`);
@@ -385,7 +401,7 @@ async function openPolygonCountry(country, withImages) {
 
   try {
     setLoading(true);
-    const response = await fetch(`countries.php?code=${encodeURIComponent(code)}`);
+    const response = await apiFetch(`countries.php?code=${encodeURIComponent(code)}`);
     if (!response.ok) throw new Error("Country lookup failed");
     const data = normalizeCountryData(await response.json());
     if (!data[0]) throw new Error("Country not found");
@@ -498,7 +514,7 @@ async function loadCountryImages(countryName) {
     const capital = country?.capital?.[0] || "";
     const lat = Array.isArray(country?.latlng) ? country.latlng[0] : "";
     const lng = Array.isArray(country?.latlng) ? country.latlng[1] : "";
-    const response = await fetch(
+    const response = await apiFetch(
       `get_country_images.php?country=${encodeURIComponent(countryName)}&capital=${encodeURIComponent(capital)}&lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
     );
     const data = await response.json();
@@ -561,7 +577,7 @@ async function saveCountry(endpoint, collection, countryName, label) {
   }
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await apiFetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -590,11 +606,7 @@ async function saveCountry(endpoint, collection, countryName, label) {
 
 async function fetchJson(url) {
   try {
-    const response = await fetch(url, {
-      headers: {
-        "Accept": "application/json"
-      }
-    });
+    const response = await apiFetch(url);
     if (!response.ok) return [];
     return await response.json();
   } catch (error) {
@@ -654,18 +666,10 @@ function renderList(list, countries) {
       showToast(`${countryName} removed.`);
 
       if (wasVisited) {
-        fetch("remove_visited.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ country: countryName })
-        }).catch(() => {});
+        apiPost("remove_visited.php", { country: countryName }).catch(() => {});
       }
       if (wasWishlisted) {
-        fetch("remove_wishlist.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ country: countryName })
-        }).catch(() => {});
+        apiPost("remove_wishlist.php", { country: countryName }).catch(() => {});
       }
     });
   });

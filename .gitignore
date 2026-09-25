@@ -18,3 +18,10 @@ Thumbs.db
 
 # Agent skill definitions, not part of the application
 .agents/
+
+# Vercel CLI project link. Machine-specific: it pins this checkout to one
+# Vercel project and team, which is wrong for every other clone and CI run.
+.vercel/
+
+.vercel
+.env*
