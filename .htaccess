@@ -11,9 +11,29 @@
     Require all denied
 </FilesMatch>
 
-# Repo metadata and data files that are not part of the served application.
+# Deny by extension, not just by filename. The set of things a browser actually
+# needs from this host is narrow and deliberate: .html, .css, .js, the .json
+# files under data/, .webmanifest, .svg, .ico and fonts. Everything below is
+# build tooling, local config or documentation that `COPY . /var/www/html` places
+# under the document root but that no client ever requests.
+#
+# The previous rules named individual files, which meant anything added later
+# silently became downloadable. docker/entrypoint.sh was the concrete case: it
+# was served verbatim from the API host, handing over the container's start-up
+# script. Naming the extension closes that class of leak for good.
+<FilesMatch "\.(sh|bash|zsh|py|rb|pl|pm|cgi|ps1|bat|cmd|ini|conf|cnf|toml|lock|log|bak|sql|md|ts|map|txt|ya?ml)$">
+    Require all denied
+</FilesMatch>
+
+# Extensionless files still need naming: the deny rule above cannot match them.
 # schema.sql in particular would hand an attacker the full table layout.
-<FilesMatch "^(schema\.sql|package\.json|package-lock\.json|skills-lock\.json|neon\.ts|README\.md|Dockerfile|render\.yaml)$">
+<FilesMatch "^(Dockerfile|Makefile|Procfile|neon\.ts)$">
+    Require all denied
+</FilesMatch>
+
+# Named files whose extension is otherwise servable. .json must stay allowed for
+# data/, and .txt/.md are already covered above.
+<FilesMatch "^(package\.json|package-lock\.json|skills-lock\.json)$">
     Require all denied
 </FilesMatch>
 
