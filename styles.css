@@ -1656,3 +1656,54 @@ body.map-page {
     min-width: 160px;
   }
 }
+
+/* --- Account deletion (danger zone) ---------------------------------------- */
+
+.danger-zone {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid rgba(244, 114, 87, 0.45);
+  border-radius: 8px;
+  background: rgba(244, 114, 87, 0.06);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.danger-zone h2 {
+  margin: 0;
+  color: var(--coral);
+}
+
+.danger-zone p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.danger-form {
+  display: grid;
+  gap: 14px;
+}
+
+.danger-form code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.btn-danger {
+  background: var(--coral);
+  color: #2a0b06;
+  font-weight: 600;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #fb8f78;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

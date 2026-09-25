@@ -4,7 +4,7 @@ session_start();
 
 header("Content-Type: application/json");
 
-if (!isset($_SESSION['user'])) {
+if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(["status" => "error", "message" => "Authentication required"]);
     exit();
@@ -20,7 +20,7 @@ if ($country === '' || mb_strlen($country) > 100) {
 }
 
 /** @var \PDO $conn */
-$stmt = $conn->prepare("DELETE FROM wishlist WHERE user_name = ? AND country = ?");
-$stmt->execute([$_SESSION['user'], $country]);
+$stmt = $conn->prepare("DELETE FROM wishlist WHERE user_id = ? AND country = ?");
+$stmt->execute([$_SESSION['user_id'], $country]);
 
 echo json_encode(["status" => "success"]);

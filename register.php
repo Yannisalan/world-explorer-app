@@ -12,7 +12,7 @@ if (!db_is_ready()) {
 }
 
 $name     = trim($_POST['name'] ?? '');
-$email    = trim($_POST['email'] ?? '');
+$email    = normalize_email((string) ($_POST['email'] ?? ''));
 $password = $_POST['password'] ?? '';
 
 // Validate name
@@ -54,7 +54,7 @@ $token = bin2hex(random_bytes(32));
 $stmt = $conn->prepare("
     INSERT INTO users
     (name, email, password, verified, verification_token)
-    VALUES (?, ?, ?, 0, ?)
+    VALUES (?, ?, ?, FALSE, ?)
 ");
 
 $stmt->execute([

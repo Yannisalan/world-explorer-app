@@ -1,25 +1,9 @@
 <?php
-session_start();
+// Session teardown is shared with the account-deletion flow in settings.php,
+// which must invalidate the session the same way.
+require_once __DIR__ . "/config.php";
 
-// Clear all session data.
-$_SESSION = [];
-
-// Delete the session cookie from the browser so it can't be replayed.
-if (ini_get("session.use_cookies")) {
-    $params = session_get_cookie_params();
-    setcookie(
-        session_name(),
-        '',
-        time() - 42000,
-        $params["path"],
-        $params["domain"],
-        $params["secure"],
-        $params["httponly"]
-    );
-}
-
-session_destroy();
+destroy_session();
 
 header("Location: login.html");
 exit();
-?>

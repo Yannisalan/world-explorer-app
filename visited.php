@@ -20,14 +20,14 @@ $pageError = "";
 if (db_is_ready()) {
     try {
         /** @var PDO $conn */
-        $stmt = $conn->prepare("SELECT country FROM visited_countries WHERE user_name = ? ORDER BY country ASC");
-        $stmt->execute([$_SESSION["user"]]);
+        $stmt = $conn->prepare("SELECT country FROM visited_countries WHERE user_id = ? ORDER BY country ASC");
+        $stmt->execute([$_SESSION["user_id"]]);
         $countries = $stmt->fetchAll(PDO::FETCH_COLUMN);
     } catch (Throwable $e) {
         $pageError = "Unable to load visited countries.";
     }
 } else {
-    $pageError = "Database unavailable. Start MySQL to view your visited countries.";
+    $pageError = "Database unavailable. Check DATABASE_URL and that PostgreSQL is reachable.";
 }
 
 $count = count($countries);

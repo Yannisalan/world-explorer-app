@@ -35,22 +35,15 @@ $user = [
 $settings = [
     "theme" => in_array($theme ?? "dark", $allowedThemes, true) ? $theme : "dark",
     "language" => "en",
-    "notifications" => 1,
+    "notifications" => true,
 ];
 
 if (!db_is_ready()) {
-    $error = "Database unavailable. Start MySQL before changing account settings.";
+    $error = "Database unavailable. Check DATABASE_URL and that PostgreSQL is reachable.";
 } else {
     try {
         /** @var PDO $conn */
-        $conn->exec("
-            CREATE TABLE IF NOT EXISTS user_settings (
-                user_id INT NOT NULL PRIMARY KEY,
-                theme VARCHAR(16) NOT NULL DEFAULT 'dark',
-                language VARCHAR(8) NOT NULL DEFAULT 'en',
-                notifications TINYINT(1) NOT NULL DEFAULT 1
-            )
-        ");
+        // The user_settings table is owned by schema.sql; no runtime DDL here.
 
         $stmt = $conn->prepare("SELECT id, name, email, password FROM users WHERE id = ?");
         $stmt->execute([$_SESSION["user_id"]]);
@@ -71,7 +64,7 @@ if (!db_is_ready()) {
         if (!$dbSettings) {
             $stmt = $conn->prepare("
                 INSERT INTO user_settings (user_id, theme, language, notifications)
-                VALUES (?, 'dark', 'en', 1)
+                VALUES (?, 'dark', 'en', TRUE)
             ");
             $stmt->execute([$_SESSION["user_id"]]);
             $dbSettings = $settings;
@@ -88,10 +81,50 @@ if (!db_is_ready()) {
 
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
             verify_csrf();
-            $email = trim((string) ($_POST["email"] ?? ""));
+
+            // Account deletion is irreversible, so it is gated on three
+            // independent conditions: a valid CSRF token, the account's
+            // current password (proving the session holder is the owner
+            // rather than a hijacked or shared session), and an exact
+            // typed confirmation.
+            if (($_POST["form_action"] ?? "") === "delete_account") {
+                $deletePassword = (string) ($_POST["current_password"] ?? "");
+                $confirmation = trim((string) ($_POST["confirm_delete"] ?? ""));
+
+                if ($confirmation !== "DELETE") {
+                    throw new RuntimeException("Type DELETE to confirm account removal.");
+                }
+
+                if (!password_verify($deletePassword, (string) $user["password"])) {
+                    throw new RuntimeException("Current password is incorrect.");
+                }
+
+                $conn->beginTransaction();
+
+                // wishlist, visited_countries and user_settings all reference
+                // users(id) ON DELETE CASCADE, so one delete removes the
+                // account and every row that belongs to it.
+                $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+                $stmt->execute([$_SESSION["user_id"]]);
+
+                if ($stmt->rowCount() !== 1) {
+                    throw new RuntimeException("Account could not be deleted. Please try again.");
+                }
+
+                $conn->commit();
+
+                // The account is gone; the session that authorised the delete
+                // must not survive it.
+                destroy_session();
+
+                header("Location: login.html?deleted=1");
+                exit();
+            }
+
+            $email = normalize_email((string) ($_POST["email"] ?? ""));
             $themeValue = (string) ($_POST["theme"] ?? "dark");
             $language = (string) ($_POST["language"] ?? "en");
-            $notifications = isset($_POST["notifications"]) ? 1 : 0;
+            $notifications = isset($_POST["notifications"]);
             $currentPassword = (string) ($_POST["current_password"] ?? "");
             $newPassword = (string) ($_POST["new_password"] ?? "");
 
@@ -125,22 +158,25 @@ if (!db_is_ready()) {
                 $stmt->execute([password_hash($newPassword, PASSWORD_DEFAULT), $_SESSION["user_id"]]);
             }
 
+            // MySQL's ON DUPLICATE KEY UPDATE is PostgreSQL's ON CONFLICT DO
+            // UPDATE, and the conflict target is the primary key on user_id.
+            // notifications is interpolated as a TRUE/FALSE literal because
+            // PDO would send a bound PHP false as an empty string, which
+            // PostgreSQL rejects for a boolean column. The value is derived
+            // from isset(), so it is a fixed keyword and never user input.
+            $notificationsLiteral = $notifications ? "TRUE" : "FALSE";
             $stmt = $conn->prepare("
                 INSERT INTO user_settings (user_id, theme, language, notifications)
-                VALUES (?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    theme = ?,
-                    language = ?,
-                    notifications = ?
+                VALUES (?, ?, ?, {$notificationsLiteral})
+                ON CONFLICT (user_id) DO UPDATE SET
+                    theme = EXCLUDED.theme,
+                    language = EXCLUDED.language,
+                    notifications = EXCLUDED.notifications
             ");
             $stmt->execute([
                 $_SESSION["user_id"],
                 $themeValue,
                 $language,
-                $notifications,
-                $themeValue,
-                $language,
-                $notifications,
             ]);
 
             $conn->commit();
@@ -276,7 +312,7 @@ $themeName = e($settings["theme"]);
                 <h2 id="notificationsTitle">Notifications</h2>
             </div>
             <label class="toggle-row">
-                <input type="checkbox" name="notifications" value="1" <?php echo ((int) $settings["notifications"] === 1) ? "checked" : ""; ?> <?php echo $canSave ? "" : "disabled"; ?>>
+                <input type="checkbox" name="notifications" value="1" <?php echo db_to_bool($settings["notifications"]) ? "checked" : ""; ?> <?php echo $canSave ? "" : "disabled"; ?>>
                 <span>Email notifications</span>
             </label>
         </section>
@@ -286,6 +322,38 @@ $themeName = e($settings["theme"]);
             <button class="btn btn-primary" type="submit" <?php echo $canSave ? "" : "disabled"; ?>>Save Settings</button>
         </div>
     </form>
+
+    <section class="danger-zone" aria-labelledby="dangerTitle">
+        <div>
+            <p class="eyebrow">Irreversible</p>
+            <h2 id="dangerTitle">Delete account</h2>
+            <p>Deleting your account permanently removes your profile, saved countries, and wishlist. This cannot be undone.</p>
+        </div>
+
+        <form class="danger-form" method="POST" <?php echo $canSave ? "" : "disabled"; ?>>
+              onsubmit="return confirm('This permanently deletes your account and all saved countries. Continue?');">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="form_action" value="delete_account">
+
+            <div class="field">
+                <label for="delete_password">Confirm your password</label>
+                <input id="delete_password" type="password" name="current_password"
+                       autocomplete="current-password" <?php echo $canSave ? "" : "disabled"; ?>>
+            </div>
+
+            <div class="field">
+                <label for="confirm_delete">Type <code>DELETE</code> to confirm</label>
+                <input id="confirm_delete" type="text" name="confirm_delete"
+                       autocomplete="off" spellcheck="false" required
+                       pattern="DELETE" placeholder="DELETE"
+                       <?php echo $canSave ? "" : "disabled"; ?>>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-danger" type="submit" <?php echo $canSave ? "" : "disabled"; ?>>Delete Account</button>
+            </div>
+        </form>
+    </section>
 </main>
 </body>
 </html>

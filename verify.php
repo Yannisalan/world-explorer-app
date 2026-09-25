@@ -24,7 +24,7 @@ if (!$user) {
 $stmt = $conn->prepare("
     UPDATE users
     SET
-        verified = 1,
+        verified = TRUE,
         verification_token = NULL
     WHERE id = ?
 ");

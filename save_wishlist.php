@@ -7,12 +7,15 @@ header("Content-Type: application/json");
 require_db_json();
 
 /** @var \PDO $conn */
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(["status" => "error", "message" => "Authentication required"]);
+    exit();
+}
+
+// Rows are keyed on user_id, so the session only needs the id. The display
+// name is still refreshed because the pages that render it read it from here.
 if (!isset($_SESSION['user'])) {
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(["status" => "error", "message" => "Authentication required"]);
-        exit();
-    }
     $u = $conn->prepare("SELECT name FROM users WHERE id = ?");
     $u->execute([$_SESSION['user_id']]);
     $dbName = $u->fetchColumn();
@@ -31,13 +34,15 @@ if ($country === '' || mb_strlen($country) > 100) {
     json_error(422, "Country is required and must be under 100 characters.");
 }
 
-$stmt = $conn->prepare("SELECT COUNT(*) FROM wishlist WHERE user_name = ? AND country = ?");
-$stmt->execute([$_SESSION['user'], $country]);
-
-if ((int) $stmt->fetchColumn() === 0) {
-    $insert = $conn->prepare("INSERT INTO wishlist (user_name, country) VALUES (?, ?)");
-    $insert->execute([$_SESSION['user'], $country]);
-}
+// The UNIQUE (user_id, country) constraint replaces the previous
+// SELECT COUNT(*) + INSERT pair, which could race two concurrent requests
+// into a duplicate-key error.
+$stmt = $conn->prepare("
+    INSERT INTO wishlist (user_id, country)
+    VALUES (?, ?)
+    ON CONFLICT (user_id, country) DO NOTHING
+");
+$stmt->execute([$_SESSION['user_id'], $country]);
 
 echo json_encode(["status" => "success"]);
 ?>

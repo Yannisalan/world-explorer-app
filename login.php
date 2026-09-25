@@ -36,7 +36,7 @@ if (!db_is_ready()) {
     redirect_with_error("login.html", "db");
 }
 
-$email = trim($_POST["email"] ?? "");
+$email = normalize_email((string) ($_POST["email"] ?? ""));
 $password = $_POST["password"] ?? "";
 
 if (
@@ -76,7 +76,7 @@ if (!password_verify($password, $user["password"])) {
 }
 
 // NEW: Email verification check
-if ((int)$user["verified"] !== 1) {
+if (!db_to_bool($user["verified"])) {
     header("Location: login.html?error=verify");
     exit();
 }

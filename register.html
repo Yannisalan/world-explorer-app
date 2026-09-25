@@ -53,11 +53,16 @@ const registerError = document.getElementById("registerError");
 const registerMessages = {
     exists: "Email already exists.",
     invalid: "Enter a valid name, email, and password.",
-    db: "Database unavailable. Start MySQL and try again."
+    // register.php redirects here with error=email when the verification
+    // mail could not be sent; without this key the failure was silent.
+    email: "Account created, but the verification email could not be sent. Try registering again.",
+    db: "Database unavailable. Check DATABASE_URL and that PostgreSQL is reachable."
 };
 const registerErrorKey = params.get("error");
 
-if (registerMessages[registerErrorKey]) {
+// Object.hasOwn, not a plain lookup: `?error=constructor` would otherwise match
+// an inherited function off Object.prototype and render "[native code]".
+if (registerErrorKey !== null && Object.hasOwn(registerMessages, registerErrorKey)) {
     registerError.textContent = registerMessages[registerErrorKey];
     registerError.hidden = false;
 } else {

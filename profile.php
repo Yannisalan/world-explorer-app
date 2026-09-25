@@ -34,18 +34,20 @@ if (db_is_ready()) {
             $_SESSION["user"] = $dbUser["name"];
         }
 
-        $countVisited = $conn->prepare("SELECT COUNT(*) FROM visited_countries WHERE user_name = ?");
-        $countVisited->execute([$user["name"]]);
+        // Counted by user_id (not display name) so the totals stay correct when
+        // a user changes their name, and cannot collide between same-named users.
+        $countVisited = $conn->prepare("SELECT COUNT(*) FROM visited_countries WHERE user_id = ?");
+        $countVisited->execute([$_SESSION["user_id"]]);
         $visitedCount = (int) $countVisited->fetchColumn();
 
-        $countWishlist = $conn->prepare("SELECT COUNT(*) FROM wishlist WHERE user_name = ?");
-        $countWishlist->execute([$user["name"]]);
+        $countWishlist = $conn->prepare("SELECT COUNT(*) FROM wishlist WHERE user_id = ?");
+        $countWishlist->execute([$_SESSION["user_id"]]);
         $wishlistCount = (int) $countWishlist->fetchColumn();
     } catch (Throwable $e) {
         $pageError = "Profile details are limited because part of the database schema is unavailable.";
     }
 } else {
-    $pageError = "Database unavailable. Start MySQL to view saved profile details.";
+    $pageError = "Database unavailable. Check DATABASE_URL and that PostgreSQL is reachable.";
 }
 
 $initial = strtoupper(substr($user["name"], 0, 1));

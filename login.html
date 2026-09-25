@@ -23,6 +23,7 @@
         <p>Sign in to open your travel map.</p>
 
         <div class="auth-message" id="registeredMessage" hidden>Account created. You can sign in now.</div>
+        <div class="auth-message" id="deletedMessage" hidden>Your account and all saved countries have been deleted.</div>
         <div class="auth-error" id="loginError" hidden></div>
 
         <form class="auth-form" action="login.php" method="POST">
@@ -49,18 +50,32 @@ const loginError = document.getElementById("loginError");
 const loginMessages = {
     "1": "Invalid email or password.",
     "verify": "Please verify your email before logging in.",
-    db: "Database unavailable. Start MySQL and try again.",
+    db: "Database unavailable. Check DATABASE_URL and that PostgreSQL is reachable.",
     locked: "Too many failed attempts. Please wait 15 minutes before trying again."
 };
 const loginErrorKey = params.get("error");
 
-if (loginMessages[loginErrorKey]) {
+// Object.hasOwn, not a plain lookup: `?error=constructor` would otherwise match
+// an inherited function off Object.prototype and render "[native code]".
+if (loginErrorKey !== null && Object.hasOwn(loginMessages, loginErrorKey)) {
     loginError.textContent = loginMessages[loginErrorKey];
     loginError.hidden = false;
 } else {
     loginError.hidden = true;
 }
 document.getElementById("registeredMessage").hidden = !params.has("registered");
+
+if (params.get("deleted") === "1") {
+    // The account and its server-side rows are gone. Drop the browser-side
+    // copies too, otherwise a deleted user's travel history stays on disk.
+    try {
+        window.localStorage.removeItem("worldExplorerVisited");
+        window.localStorage.removeItem("worldExplorerWishlist");
+    } catch (error) {
+        // localStorage can be unavailable in private mode; the notice still shows.
+    }
+    document.getElementById("deletedMessage").hidden = false;
+}
 </script>
 </body>
 </html>

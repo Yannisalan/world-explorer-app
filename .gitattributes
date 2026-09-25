@@ -1,0 +1,19 @@
+# Normalise line endings in the repository and check out LF everywhere.
+#
+# The existing blobs were committed as CRLF while the working tree is LF, which
+# made `git status` depend on core.autocrlf rather than on anything recorded in
+# the repo. Pinning it here makes the behaviour explicit and identical for every
+# clone and for CI.
+* text=auto eol=lf
+
+# Binary assets must never be run through the text filter.
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+
+# Vendored library: keep it out of diffs and language statistics.
+PHPmailer/** linguist-vendored
